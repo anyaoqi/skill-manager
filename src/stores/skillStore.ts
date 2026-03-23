@@ -1,180 +1,233 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Skill } from '../types'
+import { invoke } from '@tauri-apps/api/core'
+import type { DiscoveredSkill, ToolConfig, ScanResult, UniqueSkill } from '../types'
 
 export const useSkillStore = defineStore('skills', () => {
-  const skills = ref<Skill[]>([
-    {
-      id: '1',
-      name: 'vue-expert',
-      description: 'Vue.js coding assistant with composition API expertise',
-      version: '2.1.0',
-      tags: ['vue', 'frontend', 'composition-api'],
-      files: [
-        { name: 'SKILL.md', type: 'file', path: '/SKILL.md' },
-        { name: 'prompts', type: 'directory', path: '/prompts' },
-      ],
-      tools: [
-        { toolId: 'cursor', installed: true, synced: true, lastSynced: '2 min ago' },
-        { toolId: 'vscode', installed: true, synced: true, lastSynced: '5 min ago' },
-        { toolId: 'openclaw', installed: true, synced: true, lastSynced: '1 min ago' },
-        { toolId: 'trae', installed: false, synced: false },
-      ],
-      createdAt: '2024-01-15',
-      updatedAt: '2024-03-10',
-    },
-    {
-      id: '2',
-      name: 'react-master',
-      description: 'React development expert with hooks and TypeScript',
-      version: '1.8.2',
-      tags: ['react', 'frontend', 'typescript'],
-      files: [
-        { name: 'SKILL.md', type: 'file', path: '/SKILL.md' },
-      ],
-      tools: [
-        { toolId: 'cursor', installed: true, synced: true, lastSynced: '10 min ago' },
-        { toolId: 'vscode', installed: true, synced: true, lastSynced: '10 min ago' },
-        { toolId: 'openclaw', installed: true, synced: false, conflict: true },
-        { toolId: 'trae', installed: false, synced: false },
-      ],
-      createdAt: '2024-02-01',
-      updatedAt: '2024-03-08',
-    },
-    {
-      id: '3',
-      name: 'debug-agent',
-      description: 'AI-powered debugging assistant for all languages',
-      version: '1.2.0',
-      tags: ['debug', 'general'],
-      files: [
-        { name: 'SKILL.md', type: 'file', path: '/SKILL.md' },
-        { name: 'debug-prompts', type: 'directory', path: '/debug-prompts' },
-      ],
-      tools: [
-        { toolId: 'cursor', installed: true, synced: true, lastSynced: '1 hour ago' },
-        { toolId: 'vscode', installed: false, synced: false },
-        { toolId: 'openclaw', installed: true, synced: true, lastSynced: '30 min ago' },
-        { toolId: 'trae', installed: true, synced: true, lastSynced: '2 hours ago' },
-      ],
-      createdAt: '2024-01-20',
-      updatedAt: '2024-03-05',
-    },
-    {
-      id: '4',
-      name: 'frontend-ui-ux',
-      description: 'Designer-turned-developer for stunning UI/UX without mockups',
-      version: '1.0.2',
-      tags: ['ui', 'ux', 'design', 'frontend'],
-      files: [
-        { name: 'SKILL.md', type: 'file', path: '/SKILL.md' },
-      ],
-      tools: [
-        { toolId: 'cursor', installed: false, synced: false },
-        { toolId: 'vscode', installed: false, synced: false },
-        { toolId: 'openclaw', installed: true, synced: true, lastSynced: '5 min ago' },
-        { toolId: 'trae', installed: false, synced: false },
-      ],
-      createdAt: '2024-03-01',
-      updatedAt: '2024-03-15',
-    },
-  ])
-
-  const selectedSkill = ref<Skill | null>(null)
+  const skills = ref<DiscoveredSkill[]>([])
+  const tools = ref<ToolConfig[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
   const searchQuery = ref('')
-  const filterTag = ref<string | null>(null)
+  const filterSource = ref<string | null>(null)
 
+  // -------------------------------------------------------
+  // Computed
+  // -------------------------------------------------------
+
+  /** Deduplicated skills, grouped by name */
+  const uniqueSkills = computed<UniqueSkill[]>(() => {
+    const map = new Map<string, UniqueSkill>()
+
+    for (const skill of skills.value) {
+      const existing = map.get(skill.name)
+      if (existing) {
+        existing.instances.push(skill)
+        if (!existing.sources.includes(skill.source)) {
+          existing.sources.push(skill.source)
+        }
+        // Merge enabled tools
+        for (const t of skill.enabled_tools) {
+          if (!existing.enabledTools.includes(t)) {
+            existing.enabledTools.push(t)
+          }
+        }
+        // Also add the source itself as enabled (except global-agent which is a source, not a tool)
+        if (skill.source !== 'global-agent' && !existing.enabledTools.includes(skill.source)) {
+          existing.enabledTools.push(skill.source)
+        }
+      } else {
+        const enabledTools = [...skill.enabled_tools]
+        if (skill.source !== 'global-agent' && !enabledTools.includes(skill.source)) {
+          enabledTools.push(skill.source)
+        }
+        map.set(skill.name, {
+          name: skill.name,
+          description: skill.description || '',
+          instances: [skill],
+          sources: [skill.source],
+          enabledTools,
+          primaryPath: skill.path,
+          primarySource: skill.source,
+          primarySourceLabel: skill.source_label,
+          files: skill.files,
+        })
+      }
+    }
+
+    // Prefer global-agent as primary source if available
+    for (const unique of map.values()) {
+      const globalInstance = unique.instances.find(i => i.source === 'global-agent')
+      if (globalInstance) {
+        unique.primaryPath = globalInstance.path
+        unique.primarySource = globalInstance.source
+        unique.primarySourceLabel = globalInstance.source_label
+        unique.files = globalInstance.files
+        unique.description = globalInstance.description || unique.description
+
+        // For global-agent skills, auto-include all tools that support global agent
+        for (const tool of tools.value) {
+          if (tool.supports_global_agent && !unique.enabledTools.includes(tool.id)) {
+            unique.enabledTools.push(tool.id)
+          }
+        }
+      }
+    }
+
+    return Array.from(map.values())
+  })
+
+  /** Filtered skills based on search and source filter */
   const filteredSkills = computed(() => {
-    return skills.value.filter(skill => {
-      const matchesSearch = skill.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    return uniqueSkills.value.filter(skill => {
+      const matchesSearch = !searchQuery.value ||
+        skill.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         skill.description.toLowerCase().includes(searchQuery.value.toLowerCase())
-      const matchesTag = !filterTag.value || skill.tags.includes(filterTag.value)
-      return matchesSearch && matchesTag
+      const matchesSource = !filterSource.value ||
+        skill.sources.includes(filterSource.value)
+      return matchesSearch && matchesSource
     })
   })
 
-  const allTags = computed(() => {
-    const tags = new Set<string>()
-    skills.value.forEach(skill => skill.tags.forEach(tag => tags.add(tag)))
-    return Array.from(tags)
+  /** Global-agent skills */
+  const globalAgentSkills = computed(() =>
+    uniqueSkills.value.filter(s => s.sources.includes('global-agent'))
+  )
+
+  /** Tool-specific-only skills (NOT in global agent) */
+  const toolSpecificSkills = computed(() =>
+    uniqueSkills.value.filter(s => !s.sources.includes('global-agent'))
+  )
+
+  /** Available tools (excluding global-agent) */
+  const availableTools = computed(() =>
+    tools.value.filter(t => t.id !== 'global-agent')
+  )
+
+  /** Global agent tool config */
+  const globalAgentTool = computed(() =>
+    tools.value.find(t => t.id === 'global-agent')
+  )
+
+  /** All source options for filtering */
+  const sourceOptions = computed(() => {
+    const sources = new Set<string>()
+    skills.value.forEach(s => sources.add(s.source))
+    return Array.from(sources)
   })
 
-  const totalSkills = computed(() => skills.value.length)
+  const totalSkillCount = computed(() => uniqueSkills.value.length)
+  const globalSkillCount = computed(() => globalAgentSkills.value.length)
+  const toolSpecificCount = computed(() => toolSpecificSkills.value.length)
 
-  const syncedToolsCount = computed(() => {
-    const tools = new Set<string>()
-    skills.value.forEach(skill => {
-      skill.tools.forEach(tool => {
-        if (tool.synced) tools.add(tool.toolId)
-      })
-    })
-    return tools.size
-  })
+  // -------------------------------------------------------
+  // Actions
+  // -------------------------------------------------------
 
-  const conflictCount = computed(() => {
-    return skills.value.reduce((count, skill) => {
-      return count + skill.tools.filter(t => t.conflict).length
-    }, 0)
-  })
-
-  const getSkillById = (id: string) => {
-    return skills.value.find(skill => skill.id === id)
-  }
-
-  const addSkill = (skill: Omit<Skill, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newSkill: Skill = {
-      ...skill,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
-    }
-    skills.value.push(newSkill)
-  }
-
-  const updateSkill = (id: string, updates: Partial<Skill>) => {
-    const index = skills.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      skills.value[index] = {
-        ...skills.value[index],
-        ...updates,
-        updatedAt: new Date().toISOString().split('T')[0],
-      }
+  const scanAllSkills = async () => {
+    loading.value = true
+    error.value = null
+    try {
+      const result = await invoke<ScanResult>('scan_all_skills')
+      skills.value = result.skills
+      tools.value = result.tools
+    } catch (e: any) {
+      error.value = e?.toString() || 'Failed to scan skills'
+      console.error('Scan error:', e)
+    } finally {
+      loading.value = false
     }
   }
 
-  const deleteSkill = (id: string) => {
-    const index = skills.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      skills.value.splice(index, 1)
+  const enableSkillForTool = async (skillPath: string, toolId: string) => {
+    try {
+      await invoke('enable_skill_for_tool', { skillPath, toolId })
+      await scanAllSkills()
+    } catch (e: any) {
+      throw new Error(e?.toString() || 'Failed to enable skill')
     }
   }
 
-  const syncSkillToTool = async (skillId: string, toolId: string) => {
-    const skill = skills.value.find(s => s.id === skillId)
-    if (skill) {
-      const toolStatus = skill.tools.find(t => t.toolId === toolId)
-      if (toolStatus) {
-        toolStatus.synced = true
-        toolStatus.lastSynced = 'just now'
-        toolStatus.conflict = false
-      }
+  const disableSkillForTool = async (skillName: string, toolId: string) => {
+    try {
+      await invoke('disable_skill_for_tool', { skillName, toolId })
+      await scanAllSkills()
+    } catch (e: any) {
+      throw new Error(e?.toString() || 'Failed to disable skill')
     }
+  }
+
+  const createSkill = async (toolId: string, skillName: string, description: string) => {
+    try {
+      await invoke('create_skill', { toolId, skillName, description })
+      await scanAllSkills()
+    } catch (e: any) {
+      throw new Error(e?.toString() || 'Failed to create skill')
+    }
+  }
+
+  const deleteSkill = async (skillPath: string) => {
+    try {
+      await invoke('delete_skill', { skillPath })
+      await scanAllSkills()
+    } catch (e: any) {
+      throw new Error(e?.toString() || 'Failed to delete skill')
+    }
+  }
+
+  const openInExplorer = async (path: string) => {
+    try {
+      await invoke('open_in_explorer', { path })
+    } catch (e: any) {
+      console.error('Failed to open explorer:', e)
+    }
+  }
+
+  const readSkillFile = async (filePath: string): Promise<string> => {
+    try {
+      return await invoke<string>('read_skill_file', { filePath })
+    } catch (e: any) {
+      throw new Error(e?.toString() || 'Failed to read file')
+    }
+  }
+
+  const getUniqueSkillByName = (name: string): UniqueSkill | undefined => {
+    return uniqueSkills.value.find(s => s.name === name)
+  }
+
+  /** Check if a specific tool has a specific skill */
+  const isSkillEnabledForTool = (skillName: string, toolId: string): boolean => {
+    return skills.value.some(s => s.name === skillName && s.source === toolId)
   }
 
   return {
+    // State
     skills,
-    selectedSkill,
+    tools,
+    loading,
+    error,
     searchQuery,
-    filterTag,
+    filterSource,
+    // Computed
+    uniqueSkills,
     filteredSkills,
-    allTags,
-    totalSkills,
-    syncedToolsCount,
-    conflictCount,
-    getSkillById,
-    addSkill,
-    updateSkill,
+    globalAgentSkills,
+    toolSpecificSkills,
+    availableTools,
+    globalAgentTool,
+    sourceOptions,
+    totalSkillCount,
+    globalSkillCount,
+    toolSpecificCount,
+    // Actions
+    scanAllSkills,
+    enableSkillForTool,
+    disableSkillForTool,
+    createSkill,
     deleteSkill,
-    syncSkillToTool,
+    openInExplorer,
+    readSkillFile,
+    getUniqueSkillByName,
+    isSkillEnabledForTool,
   }
 })

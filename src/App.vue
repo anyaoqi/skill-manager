@@ -1,35 +1,40 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useSkillStore } from './stores/skillStore'
 import {
   LayoutDashboard,
   Boxes,
-  Plug,
+  Wrench,
   Settings,
   Search,
-  Bell,
   Command,
-  ArrowRightLeft,
+  RefreshCw,
 } from 'lucide-vue-next'
 
 const route = useRoute()
+const skillStore = useSkillStore()
 
 const navItems = [
-  { path: '/', name: 'Dashboard', icon: LayoutDashboard },
+  { path: '/', name: '总览', icon: LayoutDashboard },
   { path: '/skills', name: 'Skills', icon: Boxes },
-  { path: '/tools', name: 'Tools', icon: Plug },
-  { path: '/sync', name: 'Sync', icon: ArrowRightLeft },
-  { path: '/settings', name: 'Settings', icon: Settings },
+  { path: '/tools', name: '工具', icon: Wrench },
+  { path: '/settings', name: '设置', icon: Settings },
 ]
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
 }
+
+onMounted(() => {
+  skillStore.scanAllSkills()
+})
 </script>
 
 <template>
   <div class="h-screen w-screen flex flex-col bg-cyber-bg overflow-hidden">
-    <header class="h-14 flex items-center justify-between px-4 border-b border-cyber-border glass">
+    <header class="h-14 flex items-center justify-between px-4 border-b border-cyber-border glass" data-tauri-drag-region>
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center">
           <Command class="w-5 h-5 text-white" />
@@ -37,18 +42,23 @@ const isActive = (path: string) => {
         <span class="text-lg font-semibold gradient-text">SkillDock</span>
       </div>
       
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyber-card border border-cyber-border">
           <Search class="w-4 h-4 text-cyber-muted" />
           <input 
+            v-model="skillStore.searchQuery"
             type="text" 
-            placeholder="Search skills..." 
-            class="bg-transparent border-none outline-none text-sm text-cyber-text placeholder-cyber-muted w-48"
+            placeholder="搜索 skills..." 
+            class="bg-transparent border-none outline-none text-sm text-cyber-text placeholder-cyber-muted w-40"
           />
-          <span class="text-xs text-cyber-muted border border-cyber-border px-1.5 py-0.5 rounded">⌘K</span>
         </div>
-        <button class="p-2 rounded-lg hover:bg-cyber-card transition-colors">
-          <Bell class="w-5 h-5 text-cyber-muted" />
+        <button 
+          class="p-2 rounded-lg hover:bg-cyber-card transition-colors text-cyber-muted hover:text-cyber-primary"
+          :class="{ 'animate-spin': skillStore.loading }"
+          @click="skillStore.scanAllSkills()"
+          title="刷新扫描"
+        >
+          <RefreshCw class="w-5 h-5" />
         </button>
       </div>
     </header>

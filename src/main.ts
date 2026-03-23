@@ -20,7 +20,7 @@ const router = createRouter({
       component: () => import('./pages/skills/Skills.vue'),
     },
     {
-      path: '/skills/:id',
+      path: '/skills/:name',
       name: 'skill-detail',
       component: () => import('./pages/skills/SkillDetail.vue'),
     },
@@ -28,11 +28,6 @@ const router = createRouter({
       path: '/tools',
       name: 'tools',
       component: () => import('./pages/tools/Tools.vue'),
-    },
-    {
-      path: '/sync',
-      name: 'sync',
-      component: () => import('./pages/sync/Sync.vue'),
     },
     {
       path: '/settings',
