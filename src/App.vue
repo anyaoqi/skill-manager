@@ -39,7 +39,7 @@ onMounted(() => {
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center">
           <Command class="w-5 h-5 text-white" />
         </div>
-        <span class="text-lg font-semibold gradient-text">SkillDock</span>
+        <span class="text-lg font-semibold gradient-text">Local Skill Manage</span>
       </div>
       
       <div class="flex items-center gap-3">

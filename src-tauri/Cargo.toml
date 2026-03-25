@@ -1,12 +1,12 @@
 [package]
-name = "skill-dock"
+name = "local-skill-manage"
 version = "0.1.0"
 description = "Local Skill Management Tool"
 authors = []
 edition = "2021"
 
 [lib]
-name = "skill_dock_lib"
+name = "local_skill_manage_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

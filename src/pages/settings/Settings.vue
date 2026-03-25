@@ -2,7 +2,6 @@
 import { useSettingsStore } from '../../stores/settingsStore'
 import { useSkillStore } from '../../stores/skillStore'
 import {
-  Settings,
   Bell,
   RefreshCw,
   Moon,

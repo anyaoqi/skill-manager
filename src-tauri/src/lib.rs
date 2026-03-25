@@ -5,6 +5,11 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+#[cfg(unix)]
+use std::os::unix::fs as unix_fs;
+#[cfg(windows)]
+use std::os::windows::fs as windows_fs;
+
 // ============================================================
 // Data Structures
 // ============================================================
@@ -316,7 +321,7 @@ fn read_skill_file(file_path: String) -> Result<String, String> {
     fs::read_to_string(&file_path).map_err(|e| format!("Failed to read file: {}", e))
 }
 
-/// Enable a skill for a specific tool by copying it
+/// Enable a skill for a specific tool by creating a symlink
 #[tauri::command]
 fn enable_skill_for_tool(skill_path: String, tool_id: String) -> Result<String, String> {
     let home = dirs::home_dir().ok_or_else(|| "Could not find home directory".to_string())?;
@@ -345,7 +350,8 @@ fn enable_skill_for_tool(skill_path: String, tool_id: String) -> Result<String, 
         return Err("Skill already exists in target tool".to_string());
     }
 
-    copy_dir_all(&source, &dest).map_err(|e| format!("Failed to copy skill: {}", e))?;
+    // Create symlink instead of copying
+    create_symlink_dir(&source, &dest).map_err(|e| format!("Failed to create symlink: {}", e))?;
 
     Ok(dest.to_string_lossy().to_string())
 }
@@ -449,21 +455,20 @@ fn open_in_explorer(path: String) -> Result<(), String> {
     Ok(())
 }
 
-fn copy_dir_all(src: &PathBuf, dst: &PathBuf) -> Result<(), std::io::Error> {
-    if !dst.exists() {
-        fs::create_dir_all(dst)?;
+/// Create a directory symlink, handling cross-platform differences
+fn create_symlink_dir(src: &PathBuf, dst: &PathBuf) -> Result<(), std::io::Error> {
+    // Convert src to canonical absolute path for better symlink stability
+    let src_absolute = fs::canonicalize(src)?;
+
+    #[cfg(unix)]
+    {
+        unix_fs::symlink(&src_absolute, dst)?;
     }
 
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        let dest_path = dst.join(entry.file_name());
-
-        if ty.is_dir() {
-            copy_dir_all(&entry.path(), &dest_path)?;
-        } else {
-            fs::copy(entry.path(), dest_path)?;
-        }
+    #[cfg(windows)]
+    {
+        // On Windows, use symlink_dir for directory symlinks
+        windows_fs::symlink_dir(&src_absolute, dst)?;
     }
 
     Ok(())
