@@ -5,6 +5,11 @@ description = "Local Skill Management Tool"
 authors = []
 edition = "2021"
 
+# Windows manifest configuration
+[[package.metadata.windows.subsystem]]
+name = "windows"
+requested-execution-level = "requireAdministrator"
+
 [lib]
 name = "local_skill_manage_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]

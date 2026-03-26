@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run:*)",
+      "Bash(powershell -Command \"Get-Process | Where-Object {$_.ProcessName -like '*local-skill*'}\")",
+      "Bash(cargo build:*)",
+      "Bash(tasklist)",
+      "Bash(findstr /i \"rustc cargo\")",
+      "Bash(wmic process:*)",
+      "Bash(cmd //c \"ren \\\\\"D:\\\\Project\\\\其他项目\\\\skill-dock\\\\src-tauri\\\\target\\\\debug\\\\local-skill-manage.exe\\\\\" local-skill-manage.exe.old\")",
+      "Bash(powershell -Command \"Remove-Item -Path 'D:\\\\Project\\\\其他项目\\\\skill-dock\\\\src-tauri\\\\target\\\\debug' -Recurse -Force\")"
+    ]
+  }
+}
