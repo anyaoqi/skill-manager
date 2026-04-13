@@ -1,4 +1,4 @@
-# Skill Dock
+# SkillManager
 
 [![Release](https://img.shields.io/github/v/release/anyaoqi/skill-dock?include_prereleases)](https://github.com/anyaoqi/skill-dock/releases)
 [![License](https://img.shields.io/github/license/anyaoqi/skill-dock)](LICENSE)
@@ -12,7 +12,7 @@ A cross-platform desktop application for managing AI coding assistant skills acr
 
 ## Overview
 
-Skill Dock provides a unified interface to manage skills (prompts/instructions) for various AI coding assistants like OpenCode, Cursor, Claude Code, GitHub Copilot, and more. It allows you to:
+SkillManager provides a unified interface to manage skills (prompts/instructions) for various AI coding assistants like OpenCode, Cursor, Claude Code, GitHub Copilot, and more. It allows you to:
 
 - Scan and discover existing skills across all your AI tools
 - Enable/disable skills for specific tools with one click
