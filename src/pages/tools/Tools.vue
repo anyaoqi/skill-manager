@@ -96,7 +96,7 @@ const skillStore = useSkillStore()
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
-          v-for="tool in skillStore.availableTools"
+          v-for="tool in skillStore.availableTools.filter(t => t.exists)"
           :key="tool.id"
           class="cyber-card-hover"
         >
@@ -107,7 +107,7 @@ const skillStore = useSkillStore()
               </div>
               <div>
                 <h3 class="font-semibold text-cyber-text">{{ tool.name }}</h3>
-                <p class="text-xs text-cyber-muted">{{ tool.skill_count }} skills</p>
+                <p class="text-xs text-cyber-muted">{{ tool.skill_count }} 个 Skills</p>
               </div>
             </div>
             <div 
@@ -160,32 +160,72 @@ const skillStore = useSkillStore()
           <code class="text-cyber-text text-xs">~/.agents/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
-          <p class="text-cyber-primary mb-1 font-medium">OpenCode</p>
-          <code class="text-cyber-text text-xs">~/.config/opencode/skills/</code>
+          <p class="text-cyber-primary mb-1 font-medium">Antigravity</p>
+          <code class="text-cyber-text text-xs">~/.gemini/antigravity/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Augment Code</p>
+          <code class="text-cyber-text text-xs">~/.augment/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
           <p class="text-cyber-primary mb-1 font-medium">Claude Code</p>
           <code class="text-cyber-text text-xs">~/.claude/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">CodeBuddy</p>
+          <code class="text-cyber-text text-xs">~/.codebuddy/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Codex</p>
+          <code class="text-cyber-text text-xs">~/.codex/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
           <p class="text-cyber-primary mb-1 font-medium">Cursor</p>
           <code class="text-cyber-text text-xs">~/.cursor/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
-          <p class="text-cyber-primary mb-1 font-medium">VS Code (Copilot)</p>
-          <code class="text-cyber-text text-xs">~/.vscode/skills/</code>
+          <p class="text-cyber-primary mb-1 font-medium">Gemini CLI</p>
+          <code class="text-cyber-text text-xs">~/.gemini/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">GitHub Copilot</p>
+          <code class="text-cyber-text text-xs">~/.copilot/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Kimi Code CLI</p>
+          <code class="text-cyber-text text-xs">~/.kimi-code/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Kiro</p>
+          <code class="text-cyber-text text-xs">~/.kiro/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">OpenCode</p>
+          <code class="text-cyber-text text-xs">~/.config/opencode/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Qoder</p>
+          <code class="text-cyber-text text-xs">~/.qoder/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Qwen Code</p>
+          <code class="text-cyber-text text-xs">~/.qwen/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
           <p class="text-cyber-primary mb-1 font-medium">Trae</p>
           <code class="text-cyber-text text-xs">~/.trae/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
+          <p class="text-cyber-primary mb-1 font-medium">Trae CN</p>
+          <code class="text-cyber-text text-xs">~/.trae-cn/skills/</code>
+        </div>
+        <div class="p-3 rounded-lg bg-cyber-bg">
           <p class="text-cyber-primary mb-1 font-medium">Windsurf</p>
           <code class="text-cyber-text text-xs">~/.windsurf/skills/</code>
         </div>
         <div class="p-3 rounded-lg bg-cyber-bg">
-          <p class="text-cyber-primary mb-1 font-medium">Augment Code</p>
-          <code class="text-cyber-text text-xs">~/.augment/skills/</code>
+          <p class="text-cyber-primary mb-1 font-medium">Warp</p>
+          <code class="text-cyber-text text-xs">~/.warp/skills/</code>
         </div>
       </div>
     </div>

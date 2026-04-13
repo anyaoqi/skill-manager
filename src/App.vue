@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSkillStore } from './stores/skillStore'
+import { useSettingsStore } from './stores/settingsStore'
 import {
   LayoutDashboard,
   Boxes,
   Wrench,
   Settings,
-  Search,
   Command,
   RefreshCw,
 } from 'lucide-vue-next'
 
 const route = useRoute()
 const skillStore = useSkillStore()
+const settingsStore = useSettingsStore()
 
 const navItems = [
   { path: '/', name: '总览', icon: LayoutDashboard },
@@ -27,8 +28,24 @@ const isActive = (path: string) => {
   return route.path.startsWith(path)
 }
 
+const applyTheme = (theme: string) => {
+  const root = document.documentElement
+  root.classList.remove('theme-light', 'theme-dark', 'theme-system')
+  root.classList.add(`theme-${theme}`)
+}
+
+// Apply theme on change
+watch(
+  () => settingsStore.settings.theme,
+  (theme) => applyTheme(theme),
+  { immediate: true }
+)
+
 onMounted(() => {
-  skillStore.scanAllSkills()
+  // Respect the autoScan setting
+  if (settingsStore.settings.autoScan) {
+    skillStore.scanAllSkills()
+  }
 })
 </script>
 
@@ -39,28 +56,18 @@ onMounted(() => {
         <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-primary to-cyber-secondary flex items-center justify-center">
           <Command class="w-5 h-5 text-white" />
         </div>
-        <span class="text-lg font-semibold gradient-text">Local Skill Manage</span>
+        <span class="text-lg font-semibold gradient-text">SkillDock</span>
       </div>
-      
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyber-card border border-cyber-border">
-          <Search class="w-4 h-4 text-cyber-muted" />
-          <input 
-            v-model="skillStore.searchQuery"
-            type="text" 
-            placeholder="搜索 skills..." 
-            class="bg-transparent border-none outline-none text-sm text-cyber-text placeholder-cyber-muted w-40"
-          />
-        </div>
-        <button 
-          class="p-2 rounded-lg hover:bg-cyber-card transition-colors text-cyber-muted hover:text-cyber-primary"
-          :class="{ 'animate-spin': skillStore.loading }"
-          @click="skillStore.scanAllSkills()"
-          title="刷新扫描"
-        >
-          <RefreshCw class="w-5 h-5" />
-        </button>
-      </div>
+
+      <button
+        class="p-2 rounded-lg hover:bg-cyber-card transition-colors text-cyber-muted hover:text-cyber-primary"
+        :class="{ 'animate-spin': skillStore.loading }"
+        :disabled="skillStore.loading"
+        @click="skillStore.scanAllSkills()"
+        title="刷新扫描"
+      >
+        <RefreshCw class="w-5 h-5" />
+      </button>
     </header>
 
     <div class="flex-1 flex overflow-hidden">

@@ -7,7 +7,6 @@ import {
   Globe,
   Wrench,
   ArrowRight,
-  Sparkles,
   FolderOpen,
   AlertCircle,
 } from 'lucide-vue-next'
@@ -81,18 +80,9 @@ const getSourceBadge = (skill: typeof recentSkills.value[0]) => {
 
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-cyber-text">总览</h1>
-        <p class="text-cyber-muted mt-1">管理本地 AI 编程工具的 Skills</p>
-      </div>
-      <button 
-        class="cyber-btn-primary flex items-center gap-2"
-        @click="router.push('/skills')"
-      >
-        <Sparkles class="w-4 h-4" />
-        <span>查看全部</span>
-      </button>
+    <div>
+      <h1 class="text-2xl font-bold text-cyber-text">总览</h1>
+      <p class="text-cyber-muted mt-1">管理本地 AI 编程工具的 Skills</p>
     </div>
 
     <!-- Loading state -->
@@ -222,26 +212,28 @@ const getSourceBadge = (skill: typeof recentSkills.value[0]) => {
 
           <div class="space-y-2">
             <div
-              v-for="tool in skillStore.tools"
+              v-for="tool in skillStore.tools.filter(t => t.exists && t.id !== 'global-agent')"
               :key="tool.id"
               class="cyber-card flex items-center gap-3 py-3"
             >
-              <div 
-                class="w-2 h-2 rounded-full shrink-0"
-                :class="tool.exists ? 'bg-cyber-success' : 'bg-cyber-muted'"
-              ></div>
+              <div class="w-2 h-2 rounded-full bg-cyber-success shrink-0"></div>
               <div class="flex-1 min-w-0">
                 <h3 class="font-medium text-cyber-text text-sm truncate">{{ tool.name }}</h3>
-                <p class="text-[10px] text-cyber-muted truncate">{{ tool.skill_count }} skills</p>
+                <p class="text-[10px] text-cyber-muted truncate">{{ tool.skill_count }} 个 Skills</p>
               </div>
-              <span 
-                class="text-[10px] px-2 py-0.5 rounded-full shrink-0"
-                :class="tool.exists 
-                  ? 'bg-cyber-success/20 text-cyber-success' 
-                  : 'bg-cyber-muted/20 text-cyber-muted'"
+            </div>
+            <!-- Empty state -->
+            <div
+              v-if="skillStore.tools.filter(t => t.exists && t.id !== 'global-agent').length === 0"
+              class="cyber-card text-center py-6"
+            >
+              <p class="text-cyber-muted text-sm mb-2">未发现已安装的工具</p>
+              <button
+                class="text-cyber-primary text-xs flex items-center gap-1 mx-auto hover:gap-2 transition-all"
+                @click="router.push('/tools')"
               >
-                {{ tool.exists ? '已发现' : '未找到' }}
-              </span>
+                查看工具详情 <ArrowRight class="w-3 h-3" />
+              </button>
             </div>
           </div>
         </div>
