@@ -3,10 +3,9 @@
   <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="*"
-    name="com.localskillmanage.desktop"
-    type="win32"
+name="com.skillmanager.desktop"
   />
-  <description>Local Skill Manage - AI 编程 Skills 管理工具</description>
+  <description>SkillManager - AI 编程 Skills 管理工具</description>
   <!-- 请求管理员权限 -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>

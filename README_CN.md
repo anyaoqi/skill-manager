@@ -1,4 +1,4 @@
-# Skill Dock
+# SkillManager
 
 [![Release](https://img.shields.io/github/v/release/anyaoqi/skill-dock?include_prereleases)](https://github.com/anyaoqi/skill-dock/releases)
 [![License](https://img.shields.io/github/license/anyaoqi/skill-dock)](LICENSE)
@@ -12,7 +12,7 @@
 
 ## 简介
 
-Skill Dock 提供了一个统一的界面来管理各种 AI 编程助手（如 OpenCode、Cursor、Claude Code、GitHub Copilot 等）的 Skills（提示词/指令）。它允许你：
+SkillManager 提供了一个统一的界面来管理各种 AI 编程助手（如 OpenCode、Cursor、Claude Code、GitHub Copilot 等）的 Skills（提示词/指令）。它允许你：
 
 - 扫描并发现所有 AI 工具中已有的 Skills
 - 一键为特定工具启用/禁用 Skills

@@ -1,4 +1,4 @@
-// Type definitions for Local Skill Manage
+// Type definitions for SkillManager
 
 export interface SkillFileEntry {
   name: string
